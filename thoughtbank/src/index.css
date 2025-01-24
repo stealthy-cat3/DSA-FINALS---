@@ -1,4 +1,7 @@
 /* Global Styles */
+
+
+
 * {
   margin: 0;
   padding: 0;
@@ -7,7 +10,7 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f3f4f6;
+  background-color: #121212;
   color: #333;
   line-height: 1.6;
 }
@@ -122,3 +125,6 @@ button:active {
     font-size: 1rem;
   }
 }
+
+
+
