@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 
 const App = () => {
   return (
@@ -12,41 +13,51 @@ const App = () => {
 export default App;
 
 const ThoughtInput = () => {
-  const [title, setTitle] = useState(localStorage.getItem("title") || "");
-  const [content, setContent] = useState(localStorage.getItem("content") || "");
-  const [thoughts, setThoughts] = useState(
-    JSON.parse(localStorage.getItem("thoughts")) || []
-  );
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [thoughts, setThoughts] = useState([]);
 
-  // Sync title and content with local storage
+  // Fetch thoughts from the backend
   useEffect(() => {
-    localStorage.setItem("title", title);
-    localStorage.setItem("content", content);
-  }, [title, content]);
+    const fetchThoughts = async () => {
+      try {
+        const response = await axios.get("https://xavier-hbarabchckgrasdg.southeastasia-01.azurewebsites.net/thoughts");
+        setThoughts(response.data);
+      } catch (err) {
+        console.error("Error fetching thoughts:", err);
+      }
+    };
+    fetchThoughts();
+  }, []);
 
-  // Sync thoughts with local storage
-  useEffect(() => {
-    localStorage.setItem("thoughts", JSON.stringify(thoughts));
-  }, [thoughts]);
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     const newThought = {
       title,
       content,
       date: new Date().toLocaleString(),
     };
-    setThoughts((prevThoughts) => [...prevThoughts, newThought]);
-    setTitle("");
-    setContent("");
-    localStorage.removeItem("title");
-    localStorage.removeItem("content");
+
+    try {
+      // Add new thought via API
+      const response = await axios.post("https://xavier-hbarabchckgrasdg.southeastasia-01.azurewebsites.net/thoughts", newThought);
+      setThoughts((prevThoughts) => [...prevThoughts, response.data]);
+      setTitle("");
+      setContent("");
+    } catch (err) {
+      console.error("Error adding thought:", err);
+    }
   };
 
-  const handleRemoveThought = (index) => {
-    setThoughts((prevThoughts) =>
-      prevThoughts.filter((_, i) => i !== index)
-    );
+  const handleRemoveThought = async (id) => {
+    try {
+      // Delete thought via API
+      await axios.delete(`https://xavier-hbarabchckgrasdg.southeastasia-01.azurewebsites.net/thoughts/${id}`);
+      setThoughts((prevThoughts) => prevThoughts.filter((thought) => thought.id !== id));
+    } catch (err) {
+      console.error("Error deleting thought:", err);
+    }
   };
 
   return (
@@ -75,17 +86,16 @@ const ThoughtInput = () => {
       </form>
 
       <div style={{ marginTop: "20px" }}>
-        {thoughts.map((thought, index) => (
-
-          <div key={index} style={styles.thoughtCard}>
+        {thoughts.map((thought) => (
+          <div key={thought.id} style={styles.thoughtCard}>
             <div>
               <h3 style={styles.thoughtTitle}>{thought.title}</h3>
               <p style={styles.thoughtContent}>{thought.content}</p>
               <small style={styles.thoughtDate}>{thought.date}</small>
-              <br></br>
-              <br></br>
+              <br />
+              <br />
               <button
-                onClick={() => handleRemoveThought(index)}
+                onClick={() => handleRemoveThought(thought.id)}
                 style={styles.removeButton}
               >
                 Remove Thought
@@ -98,7 +108,7 @@ const ThoughtInput = () => {
   );
 };
 
-// Styles for the dark futuristic neon theme
+// Neon
 const styles = {
   container: {
     backgroundColor: "#121212",
